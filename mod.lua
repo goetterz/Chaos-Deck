@@ -11,12 +11,65 @@
 -- Store reference to this mod for config access in both deck and UI
 local current_mod_ref = SMODS.current_mod
 
--- Create custom card texture for blue fire background
+-- Create the Atlas for our custom card background
 SMODS.Atlas{
     key = "chaos_cards",
-    path = "cards_2.png",
+    path = "cards_2.png", 
     px = 71,
     py = 95
+}
+
+-- Create a DeckSkin that uses our custom background for all suits
+SMODS.DeckSkin{
+    key = "chaos_deck_skin",
+    suit = "Hearts", -- We'll create one for each suit
+    palettes = {
+        {
+            key = "chaos",
+            ranks = {'2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace'},
+            atlas = "chaos_cards",
+            pos_style = "deck"
+        }
+    }
+}
+
+SMODS.DeckSkin{
+    key = "chaos_deck_skin_diamonds",
+    suit = "Diamonds",
+    palettes = {
+        {
+            key = "chaos",
+            ranks = {'2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace'},
+            atlas = "chaos_cards",
+            pos_style = "deck"
+        }
+    }
+}
+
+SMODS.DeckSkin{
+    key = "chaos_deck_skin_clubs",
+    suit = "Clubs",
+    palettes = {
+        {
+            key = "chaos",
+            ranks = {'2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace'},
+            atlas = "chaos_cards",
+            pos_style = "deck"
+        }
+    }
+}
+
+SMODS.DeckSkin{
+    key = "chaos_deck_skin_spades", 
+    suit = "Spades",
+    palettes = {
+        {
+            key = "chaos",
+            ranks = {'2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace'},
+            atlas = "chaos_cards",
+            pos_style = "deck"
+        }
+    }
 }
 
 SMODS.Back{
@@ -35,16 +88,7 @@ SMODS.Back{
         }
     },
     apply = function(self)
-        -- Set custom card background for all cards when this deck is selected
-        G.CARD_W = 71
-        G.CARD_H = 95
         
-        -- Override the card texture atlas to use our custom blue fire background
-        if G.P_CARDS then
-            for k, v in pairs(G.P_CARDS) do
-                v.atlas = "chaos_cards"
-            end
-        end
         G.E_MANAGER:add_event(Event({
             func = function()
                 -- Get configuration - use the mod's config directly
@@ -58,7 +102,7 @@ SMODS.Back{
                 -- Process each card in the playing cards table
                 for _, card in ipairs(G.playing_cards) do
                     -- Add ENHANCEMENT if enabled and chance succeeds
-                    if cfg.enabled_enhancement and math.random(100) <= (cfg.enhancement_chance or 75) then
+                    if cfg.enabled_enhancement and math.random(100) <= (cfg.enhancement_chance or 20) then
                         -- Build list of allowed enhancements
                         local allowed_enhancements = {}
                         if cfg.allow_bonus ~= false then table.insert(allowed_enhancements, 'm_bonus') end
@@ -79,7 +123,7 @@ SMODS.Back{
                     end
                     
                     -- Add SEAL if enabled and chance succeeds
-                    if cfg.enable_seal and math.random(100) <= (cfg.seal_chance or 60) then
+                    if cfg.enable_seal and math.random(100) <= (cfg.seal_chance or 20) then
                         -- Build list of allowed seals
                         local allowed_seals = {}
                         if cfg.allow_red_seal ~= false then table.insert(allowed_seals, 'Red') end
@@ -94,7 +138,7 @@ SMODS.Back{
                     end
                     
                     -- Add EDITION if enabled and chance succeeds
-                    if cfg.enable_edition and math.random(100) <= (cfg.edition_chance or 40) then
+                    if cfg.enable_edition and math.random(100) <= (cfg.edition_chance or 20) then
                         -- Build list of allowed editions
                         local allowed_editions = {}
                         if cfg.allow_foil ~= false then table.insert(allowed_editions, 'foil') end
@@ -124,8 +168,6 @@ SMODS.Back{
         }))
     end
 }
-
--- Note: Using standard Steamodded create_toggle() functions instead of custom UI
 
 -- Percentage control callbacks
 G.FUNCS.chaos_deck_enhancement_chance = function(e)
