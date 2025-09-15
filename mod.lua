@@ -11,70 +11,18 @@
 -- Store reference to this mod for config access in both deck and UI
 local current_mod_ref = SMODS.current_mod
 
--- Create the Atlas for our custom card background
+-- Create the Atlas for our custom deck back
 SMODS.Atlas{
-    key = "chaos_cards",
-    path = "cards_2.png", 
-    px = 71,
-    py = 95
-}
-
--- Create a DeckSkin that uses our custom background for all suits
-SMODS.DeckSkin{
-    key = "chaos_deck_skin",
-    suit = "Hearts", -- We'll create one for each suit
-    palettes = {
-        {
-            key = "chaos",
-            ranks = {'2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace'},
-            atlas = "chaos_cards",
-            pos_style = "deck"
-        }
-    }
-}
-
-SMODS.DeckSkin{
-    key = "chaos_deck_skin_diamonds",
-    suit = "Diamonds",
-    palettes = {
-        {
-            key = "chaos",
-            ranks = {'2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace'},
-            atlas = "chaos_cards",
-            pos_style = "deck"
-        }
-    }
-}
-
-SMODS.DeckSkin{
-    key = "chaos_deck_skin_clubs",
-    suit = "Clubs",
-    palettes = {
-        {
-            key = "chaos",
-            ranks = {'2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace'},
-            atlas = "chaos_cards",
-            pos_style = "deck"
-        }
-    }
-}
-
-SMODS.DeckSkin{
-    key = "chaos_deck_skin_spades", 
-    suit = "Spades",
-    palettes = {
-        {
-            key = "chaos",
-            ranks = {'2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King', 'Ace'},
-            atlas = "chaos_cards",
-            pos_style = "deck"
-        }
-    }
+    key = "chaos_deck_back",
+    path = "cards_2.png",
+    px = 100,
+    py = 150
 }
 
 SMODS.Back{
     name = "Chaos Deck",
     key = "chaos_deck",
+    atlas = "chaos_deck_back",
     pos = {x = 0, y = 0},
     config = {card_limit = 52},
     loc_txt = {
@@ -84,7 +32,7 @@ SMODS.Back{
             "gets a random {C:attention}Enhancement{},",
             "a random {C:attention}Seal{}, and a random {C:attention}Edition{}",
             "(Negative excluded).",
-            "{C:inactive}(Go to settings to change to toggle different options and set custom percentages.){}"
+            "{C:inactive}(Go to settings to toggle different options and set custom percentages.){}"
         }
     },
     apply = function(self)
