@@ -1,0 +1,38 @@
+JOKER ATLAS SETUP GUIDE
+========================
+
+The stretching issue is because Balatro expects joker atlases to be formatted in a very specific way.
+
+PROBLEM: Your current 71x95 image is being treated as containing multiple jokers arranged in a grid.
+
+SOLUTION OPTIONS:
+
+Option 1: Single Joker Atlas (Recommended)
+------------------------------------------
+1. Create image exactly 71x95 pixels
+2. Make sure there's some transparent padding around the actual artwork
+3. The joker face should be centered, not filling the entire frame
+4. Save as PNG with transparency
+
+Option 2: Use Default Sprite Temporarily  
+-----------------------------------------
+The joker is currently set to use default appearance while functionality works.
+Test that the eating mechanic works first, then worry about the image.
+
+Option 3: Multi-Joker Atlas (For Future)
+-----------------------------------------
+If you want multiple custom jokers later:
+- Create image that's 142x95 (2 jokers wide) or 71x190 (2 jokers tall)
+- Arrange jokers in a grid
+- Update pos = {x, y} coordinates for each joker
+
+CURRENT STATUS:
+- Atlas is commented out
+- Joker uses default appearance  
+- All functionality (eating food jokers, gaining mult) should work
+- Focus on testing the mechanics first!
+
+NEXT STEPS:
+1. Test the joker in-game - make sure it eats food jokers correctly
+2. Once mechanics work, we'll fix the image display
+3. Your image needs transparent padding - the artwork shouldn't go to the very edges
