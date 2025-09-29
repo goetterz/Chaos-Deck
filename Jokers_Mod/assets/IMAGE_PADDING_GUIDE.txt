@@ -1,0 +1,35 @@
+JOKER IMAGE PADDING GUIDE
+=========================
+
+CURRENT PROBLEM: Your image fills the entire 71x95 frame
+SOLUTION: Add transparent padding around the artwork
+
+CORRECT JOKER IMAGE LAYOUT:
+┌─────────────────────────────┐ ← 71 pixels wide
+│ ░░░░░░░░░░░░░░░░░░░░░░░░░░░ │ ← 10px transparent border
+│ ░░                     ░░ │
+│ ░░    [YOUR ARTWORK]   ░░ │ ← Actual face/character here
+│ ░░      (centered)     ░░ │   (about 50x75 pixels)
+│ ░░                     ░░ │
+│ ░░░░░░░░░░░░░░░░░░░░░░░░░░░ │ ← 10px transparent border
+└─────────────────────────────┘ ← 95 pixels tall
+
+STEPS TO FIX:
+1. Open your current 71x95 image in an image editor
+2. Create a new 71x95 canvas with transparent background
+3. Paste your current artwork scaled down to about 50x75 pixels
+4. Center it in the frame (leaving ~10-15 pixels transparent on all sides)
+5. Save as PNG with transparency
+
+FOR 2x VERSION:
+- Same process but 142x190 canvas
+- Artwork scaled to about 100x150 pixels
+- Same proportional borders (20-30 pixels transparent)
+
+RECOMMENDED TOOLS:
+- GIMP (free) - Best for this kind of editing
+- Paint.NET (free) 
+- Photoshop
+- Even MS Paint can work if you're careful with transparency
+
+The stretching happens because Balatro expects joker artwork to be smaller than the frame, with transparent space around it.
