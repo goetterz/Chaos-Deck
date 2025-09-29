@@ -272,5 +272,231 @@ SMODS.Joker{
     end
 }
 
+-- Create Atlas for Spell Map joker
+SMODS.Atlas{
+    key = "spell_map_atlas",
+    path = "spell_map_joker.png", -- You'll create this image
+    px = 71,
+    py = 95,
+    atlas_table = 'ASSET_ATLAS'
+}
+
+-- Spell Map Joker
+SMODS.Joker{
+    key = "spell_map",
+    name = "Spell Map",
+    rarity = 2, -- Uncommon rarity
+    cost = 6,
+    atlas = "spell_map_atlas",
+    pos = {x = 0, y = 0},
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    
+    config = {
+        extra = {
+            base_mult = 2, -- Base multiplier when confused
+            direction_understood = false, -- Whether directions were understood this hand
+            copied_effect = nil, -- What effect was copied
+            copied_joker1 = "None", -- First joker being copied (for display)
+            copied_joker2 = "" -- Second joker being copied (for display)
+        }
+    },
+    
+    loc_txt = {
+        name = "Spell Map",
+        text = {
+            "Asks {C:attention}2 random Jokers{} for directions",
+            "Each has {C:green}#1# in #2#{} chance to give",
+            "clear directions to copy their effect",
+            "Otherwise: {C:red}'I can't spell it!'{}", 
+            "{C:inactive}Currently copying:{} {C:attention}#3#{}",
+            "{C:attention}#4#{}"
+        }
+    },
+    
+    loc_vars = function(self, info_queue, center)
+        local prob_multiplier = G.GAME and G.GAME.probabilities and G.GAME.probabilities.normal or 1
+        local numerator = math.min(prob_multiplier, 4)  -- Cap display at 4/4 for clarity
+        
+        -- Get copied joker names for display
+        local copied1 = (center and center.ability and center.ability.extra and center.ability.extra.copied_joker1) or "None"
+        local copied2 = (center and center.ability and center.ability.extra and center.ability.extra.copied_joker2) or ""
+        
+        return {vars = {numerator, 4, copied1, copied2}}
+    end,
+    
+    calculate = function(self, card, context)
+        -- Pick new targets at start of round and after each hand
+        if context.first_hand_drawn or context.after then
+            -- Reset previous directions
+            card.ability.extra.direction_understood = false
+            card.ability.extra.copied_effect = nil
+            
+            -- Look for other jokers to ask for directions (only blueprint-compatible ones)
+            local other_jokers = {}
+            if G.jokers and G.jokers.cards then
+                for _, joker in ipairs(G.jokers.cards) do
+                    if joker ~= card and joker.ability and joker.ability.name then
+                        -- Check if the joker is blueprint compatible
+                        local is_compatible = true
+                        if joker.config and joker.config.center then
+                            is_compatible = joker.config.center.blueprint_compat ~= false
+                        end
+                        
+                        if is_compatible then
+                            table.insert(other_jokers, joker)
+                        end
+                    end
+                end
+            end
+            
+            if #other_jokers >= 2 then
+                -- Ask 2 different random jokers for directions
+                local shuffled_jokers = {}
+                for i, joker in ipairs(other_jokers) do
+                    shuffled_jokers[i] = joker
+                end
+                -- Shuffle the array
+                for i = #shuffled_jokers, 2, -1 do
+                    local j = math.random(i)
+                    shuffled_jokers[i], shuffled_jokers[j] = shuffled_jokers[j], shuffled_jokers[i]
+                end
+                
+                local direction_giver1 = shuffled_jokers[1]
+                local direction_giver2 = shuffled_jokers[2]
+                
+                -- Update display text
+                card.ability.extra.copied_joker1 = direction_giver1.ability.name or "Unknown"
+                card.ability.extra.copied_joker2 = direction_giver2.ability.name or "Unknown"
+                
+                -- 1 in 4 chance for each joker to give clear directions
+                local understood1 = pseudorandom('spell_map_dir1') < G.GAME.probabilities.normal/4
+                local understood2 = pseudorandom('spell_map_dir2') < G.GAME.probabilities.normal/4
+                
+                if understood1 then
+                    card.ability.extra.direction_understood = true
+                    card.ability.extra.copied_effect = direction_giver1.ability.name
+                elseif understood2 then
+                    card.ability.extra.direction_understood = true
+                    card.ability.extra.copied_effect = direction_giver2.ability.name
+                else
+                    card.ability.extra.direction_understood = false
+                    card.ability.extra.copied_effect = nil
+                end
+            elseif #other_jokers == 1 then
+                -- Only one joker available - ask them with two attempts
+                local direction_giver = other_jokers[1]
+                
+                -- Update display text
+                card.ability.extra.copied_joker1 = direction_giver.ability.name or "Unknown"
+                card.ability.extra.copied_joker2 = ""
+                
+                local understood1 = pseudorandom('spell_map_dir1') < G.GAME.probabilities.normal/4
+                local understood2 = pseudorandom('spell_map_dir2') < G.GAME.probabilities.normal/4
+                
+                if understood1 or understood2 then
+                    card.ability.extra.direction_understood = true
+                    card.ability.extra.copied_effect = direction_giver.ability.name
+                else
+                    card.ability.extra.direction_understood = false
+                    card.ability.extra.copied_effect = nil
+                end
+            else
+                -- No jokers available
+                card.ability.extra.copied_joker1 = "None"
+                card.ability.extra.copied_joker2 = ""
+                card.ability.extra.direction_understood = false
+                card.ability.extra.copied_effect = nil
+
+            end
+        end
+        
+        -- Apply effect during scoring
+        if context.joker_main then
+            -- Show popup message based on whether we understood directions
+            if not card.ability.extra.direction_understood then
+                G.E_MANAGER:add_event(Event({
+                    trigger = 'after',
+                    delay = 0.1,
+                    func = function()
+                        card_eval_status_text(card, 'extra', nil, nil, nil, {
+                            message = "I can't spell it!",
+                            colour = G.C.RED
+                        })
+                        return true
+                    end
+                }))
+                return nil -- No effect when we can't understand
+            end
+            
+            if card.ability.extra.direction_understood and card.ability.extra.copied_effect then
+                -- Successfully understood directions - try to copy the effect from the other joker
+                local copied_joker = nil
+                
+                -- Find the joker we're copying from
+                if G.jokers and G.jokers.cards then
+                    for _, joker in ipairs(G.jokers.cards) do
+                        if joker.ability and joker.ability.name == card.ability.extra.copied_effect and joker ~= card then
+                            copied_joker = joker
+                            break
+                        end
+                    end
+                end
+                
+                -- If we found the joker to copy, use SMODS.blueprint_effect
+                if copied_joker then
+                    -- Show popup message that we're copying
+                    G.E_MANAGER:add_event(Event({
+                        trigger = 'after',
+                        delay = 0.1,
+                        func = function()
+                            card_eval_status_text(card, 'extra', nil, nil, nil, {
+                                message = "Copied " .. (copied_joker.ability.name or "Joker"),
+                                colour = G.C.GREEN
+                            })
+                            return true
+                        end
+                    }))
+                    
+                    -- Try SMODS.blueprint_effect first
+                    local copied_result = nil
+                    if SMODS and SMODS.blueprint_effect then
+                        copied_result = SMODS.blueprint_effect(card, copied_joker, context)
+                    end
+                    
+                    -- If SMODS.blueprint_effect failed, try manual approach
+                    if not copied_result and copied_joker.calculate then
+                        -- Create a context copy for safety
+                        local copy_context = {}
+                        for k, v in pairs(context) do
+                            copy_context[k] = v
+                        end
+                        copy_context.blueprint_card = card
+                        
+                        copied_result = copied_joker:calculate_joker(copy_context)
+                        if copied_result then
+                            copied_result.card = card
+                            copied_result.colour = G.C.GREEN
+                        end
+                    end
+                    
+                    if copied_result then
+                        return copied_result
+                    end
+                end
+                
+                -- Fallback - couldn't copy for some reason but understood directions
+                return {
+                    message = "Tried to copy but failed - +6 Mult",
+                    mult_mod = 6
+                }
+            -- If we didn't understand directions, do nothing (no mult bonus)
+            -- The "I can't spell it!" message was already shown
+            end
+        end
+    end
+}
+
 ----------------------------------------------
 ------------JOKERS MOD CODE END--------------
