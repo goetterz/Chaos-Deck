@@ -14,7 +14,7 @@ SMODS.Atlas{
 SMODS.Joker{
     key = "spell_map",
     name = "Spell Map",
-    rarity = 2, -- Uncommon rarity
+    rarity = 3, -- Rare rarity
     cost = 6,
     atlas = "spell_map_atlas",
     pos = {x = 0, y = 0},
@@ -126,21 +126,19 @@ SMODS.Joker{
             card.ability.extra.copied_effects = {}
             card.ability.extra.direction_understood = false
             
-            -- 1 in 4 chance for each joker to give clear directions  
-            -- Oops All 6s will automatically modify these probabilities during scoring
-            local understood1 = SMODS.pseudorandom_probability(card, 'spell_map_prob1', 1, 4)
-            local understood2 = false
-            if card.ability.extra.target_joker2 then
-                understood2 = SMODS.pseudorandom_probability(card, 'spell_map_prob2', 1, 4)
-            end
-            
             -- Store all successful directions
             local successful_directions = {}
-            if understood1 and card.ability.extra.target_joker1 then
+            
+            -- Check first joker - always exists if we're here
+            if SMODS.pseudorandom_probability(card, 'spell_map_prob', 1, 4) then
                 table.insert(successful_directions, card.ability.extra.target_joker1.ability.name)
             end
-            if understood2 and card.ability.extra.target_joker2 then
-                table.insert(successful_directions, card.ability.extra.target_joker2.ability.name)
+            
+            -- Check second joker - only if it exists AND is different from first
+            if card.ability.extra.target_joker2 and card.ability.extra.target_joker2 ~= card.ability.extra.target_joker1 then
+                if SMODS.pseudorandom_probability(card, 'spell_map_prob', 1, 4) then
+                    table.insert(successful_directions, card.ability.extra.target_joker2.ability.name)
+                end
             end
             
             -- Store the successful jokers for actual copying later
@@ -155,7 +153,7 @@ SMODS.Joker{
                 }
             else
                 return {
-                    message = "I can't spell it!",
+                    message = "Can't spell!",
                     colour = G.C.RED
                 }
             end

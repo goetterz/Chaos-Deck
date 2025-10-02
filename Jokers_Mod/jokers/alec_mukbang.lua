@@ -57,6 +57,7 @@ SMODS.Joker {
             "destroy all {C:attention}food{} Jokers",
             "and gain {C:red}X1{} Mult for each",
             "destroyed food Joker",
+            "{C:green}I hunger...{}",
             "{C:inactive}(Currently {C:red}X#1#{C:inactive} Mult)"
         }
     },
@@ -108,6 +109,19 @@ SMODS.Joker {
                                 message = "+" .. destroyed_count .. " Mult!",
                                 colour = G.C.RED
                             })
+                            
+                            -- Add delayed "I hunger..." message
+                            G.E_MANAGER:add_event(Event({
+                                trigger = 'after',
+                                delay = 0.5,
+                                func = function()
+                                    card_eval_status_text(card, 'extra', nil, nil, nil, {
+                                        message = "I hunger...",
+                                        colour = G.C.DARK_EDITION
+                                    })
+                                    return true
+                                end
+                            }))
                             
                             return true
                         end

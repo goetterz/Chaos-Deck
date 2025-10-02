@@ -111,7 +111,7 @@ SMODS.Joker{
                 if card.ability.extra.rounds_remaining <= 0 then
                     G.E_MANAGER:add_event(Event({
                         trigger = 'after',
-                        delay = 0.5,
+                        delay = 0.3,
                         func = function()
                             -- Death message
                             card_eval_status_text(card, 'extra', nil, nil, nil, {
