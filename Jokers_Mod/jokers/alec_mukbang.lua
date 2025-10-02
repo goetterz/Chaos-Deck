@@ -83,51 +83,76 @@ SMODS.Joker {
                     end
                 end
                 
-                -- Second pass: actually destroy the jokers
+                -- Second pass: sequentially devour each joker with dramatic effect
                 if destroyed_count > 0 then
-                    -- Add visual effect
+                    -- Create sequential eating events - works for any number of food jokers
+                    local base_delay = 0.1
+                    local sequence_interval = 0.3 -- Clean 0.3-second intervals between each eating
+                    
+                    for i, joker_to_destroy in ipairs(cards_to_destroy) do
+                        -- Sound, jiggle, and eating happen together sequentially
+                        G.E_MANAGER:add_event(Event({
+                            trigger = 'after',
+                            delay = base_delay + (i - 1) * sequence_interval,
+                            func = function()
+                                -- Sound and effects happen together
+                                play_sound('chaos_deck_jokers_eating', 1.0 + math.random() * 0.2, 0.8)
+                                card:juice_up(1.2, 1.2) -- Big jiggle
+                                joker_to_destroy:start_dissolve(nil, true) -- Destroy joker
+                                
+                                return true
+                            end
+                        }))
+                    end
+                    
+                    -- Final total mult message after all food is consumed
                     G.E_MANAGER:add_event(Event({
                         trigger = 'after',
-                        delay = 0.1,
+                        delay = base_delay + destroyed_count * sequence_interval + 0.2, -- Final message after all eating is done
                         func = function()
-                            for _, joker_to_destroy in ipairs(cards_to_destroy) do
-                                -- Create destruction effect
-                                joker_to_destroy:start_dissolve(nil, true)
-                            end
-                            
                             -- Update Alec Mukbang's multiplier
                             card.ability.extra.x_mult = card.ability.extra.x_mult + destroyed_count
                             
-                            -- Show juice effect on Alec Mukbang
-                            card:juice_up(0.8, 0.8)
+                            -- Final satisfaction juice
+                            card:juice_up(1.5, 1.5)
                             
-                            -- Play sound effect
-                            play_sound('generic1', 0.9 + math.random() * 0.1, 0.8)
-                            
-                            -- Create popup text
+                            -- Show total mult gained
                             card_eval_status_text(card, 'extra', nil, nil, nil, {
-                                message = "+" .. destroyed_count .. " Mult!",
+                                message = "+ X" .. destroyed_count .. " Mult!",
                                 colour = G.C.RED
                             })
                             
-                            -- Add delayed "I hunger..." message
-                            G.E_MANAGER:add_event(Event({
-                                trigger = 'after',
-                                delay = 0.5,
-                                func = function()
-                                    card_eval_status_text(card, 'extra', nil, nil, nil, {
-                                        message = "I hunger...",
-                                        colour = G.C.DARK_EDITION
-                                    })
-                                    return true
-                                end
-                            }))
+                            -- Play final satisfaction sound
+                            play_sound('generic1', 0.8, 0.9)
                             
                             return true
                         end
                     }))
                 end
             end
+        end
+        
+        -- Hunger reminder at end of round (only once per round)
+        if context.end_of_round and not context.blueprint and not context.repetition and context.main_eval then
+            G.E_MANAGER:add_event(Event({
+                trigger = 'after',
+                delay = 0.5, -- Much shorter delay
+                func = function()
+                    -- Play stomach grumble sound
+                    play_sound('chaos_deck_jokers_hungry_growl', 1.0, 0.8)
+                    
+                    -- Show hunger message
+                    card_eval_status_text(card, 'extra', nil, nil, nil, {
+                        message = "I still hunger...",
+                        colour = G.C.DARK_EDITION
+                    })
+                    
+                    -- Subtle juice effect
+                    card:juice_up(0.5, 0.5)
+                    
+                    return true
+                end
+            }))
         end
         
         -- Apply the multiplier during scoring
